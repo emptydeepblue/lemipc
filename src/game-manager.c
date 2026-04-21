@@ -1,0 +1,99 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   game-manager.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: everonel <everonel@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/20 20:04:43 by everonel          #+#    #+#             */
+/*   Updated: 2026/04/21 11:44:40 by everonel         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "lemipc.h"
+
+static int	get_shmid(int *is_creator)
+{
+	key_t	key;
+	int		shmid;
+
+	key = ftok("/tmp", SHM_KEY_ID);
+	if (key < 0)
+		return (-1);
+	shmid = shmget(key, sizeof(t_board), IPC_CREAT | IPC_EXCL | 0666);
+	if (shmid >= 0)
+	{
+		*is_creator = 1;
+		return (shmid);
+	}
+	*is_creator = 0;
+	return (shmget(key, sizeof(t_board), 0666));
+}
+
+static int	get_semid(int is_creator)
+{
+	key_t	key;
+	int		semid;
+
+	key = ftok("/tmp", SEM_KEY_ID);
+	if (key < 0)
+		return (-1);
+	semid = semget(key, 1, IPC_CREAT | 0666);
+	if (semid < 0)
+		return (-1);
+	if (is_creator)
+		semctl(semid, 0, SETVAL, 1);
+	return (semid);
+}
+
+int		init_game(t_game *game)
+{
+	int			is_creator;
+
+	ft_memset(game, 0, sizeof(t_game));
+	game->shmid = get_shmid(&is_creator);
+	if (game->shmid < 0) {
+		draw_error("Failed to create or access shared memory");
+		return (-1);
+	}
+	game->board = shmat(game->shmid, NULL, 0);
+	if (game->board == (void *)-1) {
+		draw_error("Failed to attach shared memory");
+		return (-1);
+	}
+	if (is_creator)
+	{
+		ft_memset(game->board, 0, sizeof(t_board));
+		game->board->running = 1;
+	}
+	game->semid = get_semid(is_creator);
+	if (game->semid < 0) {
+		draw_error("Failed to get semaphore ID");
+		return (-1);
+	}
+	return (0);
+}
+
+void	cleanup_ipc(void)
+{
+	key_t	shm_key;
+	key_t	sem_key;
+	int		shmid;
+	int		semid;
+
+	shm_key = ftok("/tmp", SHM_KEY_ID);
+	sem_key = ftok("/tmp", SEM_KEY_ID);
+	if (shm_key >= 0)
+	{
+		shmid = shmget(shm_key, sizeof(t_board), 0666);
+		if (shmid >= 0)
+			shmctl(shmid, IPC_RMID, NULL);
+	}
+	if (sem_key >= 0)
+	{
+		semid = semget(sem_key, 1, 0666);
+		if (semid >= 0)
+			semctl(semid, 0, IPC_RMID);
+	}
+}
+
