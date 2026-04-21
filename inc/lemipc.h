@@ -82,11 +82,14 @@ typedef struct s_game
 
 // game-manager.c
 int			init_game(t_game *game);
-void		cleanup_ipc(void);
+void		cleanup_game(t_game *game);
 
 // player-manager.c
 t_player	register_player(t_board *board, int semid, int team);
-void		move_player(t_player *player, t_board *board, int semid);
+void		sync_alive(t_player *player, t_board *board);
+
+// moves-manager.c
+int			move_player(t_player *player, t_board *board, int semid);
 
 // draw.c
 void		draw_spawn(t_player player);

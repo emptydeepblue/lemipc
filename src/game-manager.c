@@ -6,7 +6,7 @@
 /*   By: everonel <everonel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/20 20:04:43 by everonel          #+#    #+#             */
-/*   Updated: 2026/04/21 11:44:40 by everonel         ###   ########.fr       */
+/*   Updated: 2026/04/21 12:17:58 by everonel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,26 +74,16 @@ int		init_game(t_game *game)
 	return (0);
 }
 
-void	cleanup_ipc(void)
+void	cleanup_game(t_game *game)
 {
-	key_t	shm_key;
-	key_t	sem_key;
-	int		shmid;
-	int		semid;
-
-	shm_key = ftok("/tmp", SHM_KEY_ID);
-	sem_key = ftok("/tmp", SEM_KEY_ID);
-	if (shm_key >= 0)
-	{
-		shmid = shmget(shm_key, sizeof(t_board), 0666);
-		if (shmid >= 0)
-			shmctl(shmid, IPC_RMID, NULL);
+	if (game->board) {
+		shmdt(game->board);
 	}
-	if (sem_key >= 0)
-	{
-		semid = semget(sem_key, 1, 0666);
-		if (semid >= 0)
-			semctl(semid, 0, IPC_RMID);
+	if (game->shmid >= 0) {
+		shmctl(game->shmid, IPC_RMID, NULL);
+	}
+	if (game->semid >= 0) {
+		semctl(game->semid, 0, IPC_RMID);
 	}
 }
 

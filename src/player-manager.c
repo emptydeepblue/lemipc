@@ -6,7 +6,7 @@
 /*   By: everonel <everonel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/21 11:19:10 by everonel          #+#    #+#             */
-/*   Updated: 2026/04/21 11:29:29 by everonel         ###   ########.fr       */
+/*   Updated: 2026/04/21 17:27:47 by everonel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,8 +48,10 @@ t_player	register_player(t_board *board, int semid, int team)
 	unlock = (struct sembuf){0, 1, 0};
 	semop(semid, &lock, 1);
 	i = 0;
-	while (i < MAX_PLAYERS * MAX_TEAMS) {
-		if (board->players[i].pid == 0) {
+	while (i < MAX_PLAYERS * MAX_TEAMS)
+	{
+		if (board->players[i].pid == 0)
+		{
 			board->players[i] = make_player(team, find_spawn(board));
 			board->player_count++;
 			semop(semid, &unlock, 1);
@@ -63,10 +65,16 @@ t_player	register_player(t_board *board, int semid, int team)
 	return (empty);
 }
 
-void    move_player(t_player *player, t_board *board, int semid)
+void	sync_alive(t_player *player, t_board *board)
 {
-    // This function will be implemented in the next steps
-    (void)player;
-    (void)board;
-    (void)semid;
+	int	i;
+
+	i = 0;
+	while (i < MAX_PLAYERS * MAX_TEAMS)
+	{
+		if (board->players[i].pid == player->pid)
+			return ;
+		i++;
+	}
+	player->alive = 0;
 }
