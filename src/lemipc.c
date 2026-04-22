@@ -6,7 +6,7 @@
 /*   By: everonel <everonel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/20 18:09:30 by everonel          #+#    #+#             */
-/*   Updated: 2026/04/21 17:27:47 by everonel         ###   ########.fr       */
+/*   Updated: 2026/04/22 12:23:56 by everonel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ int	main(int ac, char **av)
 		sync_alive(&player, game.board);
 		if (!player.alive)
 			break ;
-		if (move_player(&player, game.board, game.semid))
+		if (move_player(&player, game.board, game.semid, game.msgid))
 		{
 			draw_victory(player.team);
 			break ;

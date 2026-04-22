@@ -6,7 +6,7 @@
 /*   By: everonel <everonel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/20 18:12:20 by everonel          #+#    #+#             */
-/*   Updated: 2026/04/21 12:19:52 by everonel         ###   ########.fr       */
+/*   Updated: 2026/04/22 09:56:01 by everonel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,10 +45,10 @@ static void	buf_add_prefix(char *buf, int *len, t_player player)
 {
 	buf_add_str(buf, len, g_skins[player.skin].color);
 	buf_add_str(buf, len, g_skins[player.skin].icon);
-	buf_add_str(buf, len, " " TEXT_BOLD "t");
+	buf_add_str(buf, len, " " TEXT_BOLD "T");
 	buf_add_int(buf, len, player.team);
-	buf_add_str(buf, len, " P");
-	buf_add_int(buf, len, player.pid);
+	// buf_add_str(buf, len, " P");
+	// buf_add_int(buf, len, player.pid);
 	buf_add_str(buf, len, RESET ": ");
 }
 

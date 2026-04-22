@@ -2,6 +2,7 @@
 # define LEMIPC_H
 # include "../libft/libft.h"
 # include <sys/ipc.h>
+# include <sys/msg.h>
 # include <sys/shm.h>
 # include <sys/sem.h>
 # include <sys/types.h>
@@ -11,9 +12,12 @@
 # define MAP_SIZE    100
 # define MAX_PLAYERS 4
 # define MAX_TEAMS   4
+# define TEXT_SIZE	128
 
 # define SHM_KEY_ID  'L'
 # define SEM_KEY_ID  'M'
+# define MSG_KEY_ID  'N'
+
 
 # define RESET       "\033[0m"
 # define COLOR_GREEN   "\033[32m"
@@ -77,19 +81,32 @@ typedef struct s_game
 {
 	int			shmid;
 	int			semid;
+	int			msgid;
+	int			is_creator;
 	t_board		*board;
 }	t_game;
 
-// game-manager.c
+typedef struct s_msgbuf
+{
+	long	mtype;
+	char	mtext[TEXT_SIZE];
+}	t_msgbuf;
+
+// ipc.c
 int			init_game(t_game *game);
 void		cleanup_game(t_game *game);
 
-// player-manager.c
+// player.c
 t_player	register_player(t_board *board, int semid, int team);
 void		sync_alive(t_player *player, t_board *board);
 
-// moves-manager.c
-int			move_player(t_player *player, t_board *board, int semid);
+// move.c
+int			move_player(t_player *player, t_board *board, int semid, int msgid);
+
+// message.c
+void		send_target(int msgid, int team, t_position target);
+int			read_votes(int msgid, int team, t_position *votes, int max_votes);
+t_position	vote_target(t_position *votes, int count, t_position current);
 
 // draw.c
 void		draw_spawn(t_player player);

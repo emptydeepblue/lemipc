@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   game-manager.c                                     :+:      :+:    :+:   */
+/*   ipc.c                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: everonel <everonel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/20 20:04:43 by everonel          #+#    #+#             */
-/*   Updated: 2026/04/21 12:17:58 by everonel         ###   ########.fr       */
+/*   Updated: 2026/04/22 12:39:49 by everonel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,20 @@ static int	get_semid(int is_creator)
 	return (semid);
 }
 
+static int	get_msgid(void)
+{
+	key_t	key;
+	int		msgid;
+
+	key = ftok("/tmp", MSG_KEY_ID);
+	if (key < 0)
+		return (-1);
+	msgid = msgget(key, IPC_CREAT | 0666);
+	if (msgid < 0)
+		return (-1);
+	return (msgid);
+}
+
 int		init_game(t_game *game)
 {
 	int			is_creator;
@@ -61,14 +75,22 @@ int		init_game(t_game *game)
 		draw_error("Failed to attach shared memory");
 		return (-1);
 	}
+	game->is_creator = is_creator;
 	if (is_creator)
 	{
 		ft_memset(game->board, 0, sizeof(t_board));
 		game->board->running = 1;
 	}
 	game->semid = get_semid(is_creator);
-	if (game->semid < 0) {
+	if (game->semid < 0)
+	{
 		draw_error("Failed to get semaphore ID");
+		return (-1);
+	}
+	game->msgid = get_msgid();
+	if (game->msgid < 0)
+	{
+		draw_error("Failed to get message queue ID");
 		return (-1);
 	}
 	return (0);
@@ -76,14 +98,15 @@ int		init_game(t_game *game)
 
 void	cleanup_game(t_game *game)
 {
-	if (game->board) {
+	if (game->board)
 		shmdt(game->board);
-	}
-	if (game->shmid >= 0) {
+	if (!game->is_creator)
+		return ;
+	if (game->shmid >= 0)
 		shmctl(game->shmid, IPC_RMID, NULL);
-	}
-	if (game->semid >= 0) {
+	if (game->semid >= 0)
 		semctl(game->semid, 0, IPC_RMID);
-	}
+	if (game->msgid >= 0)
+		msgctl(game->msgid, IPC_RMID, NULL);
 }
 

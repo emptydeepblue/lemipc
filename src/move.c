@@ -6,7 +6,7 @@
 /*   By: everonel <everonel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/21 17:26:32 by everonel          #+#    #+#             */
-/*   Updated: 2026/04/22 09:28:43 by everonel         ###   ########.fr       */
+/*   Updated: 2026/04/22 16:14:52 by everonel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ static int	manhattan(t_position a, t_position b)
 	return ((dx < 0 ? -dx : dx) + (dy < 0 ? -dy : dy));
 }
 
-static t_position	find_target(t_player *player, t_board *board)
+static t_position	find_nearest(t_player *player, t_board *board)
 {
 	t_position	best;
 	int			best_dist;
@@ -132,17 +132,25 @@ static void	update_board_pos(t_player *player, t_board *board, t_position pos)
 	}
 }
 
-int	move_player(t_player *player, t_board *board, int semid)
+int	move_player(t_player *player, t_board *board, int semid, int msgid)
 {
 	struct sembuf	lock;
 	struct sembuf	unlock;
 	t_position		new_pos;
 	t_move			move;
 	t_player		killed;
+	t_position		target;
+	t_position  votes[8];                                                                                                                                                        
+  	int         count;
 
 	lock = (struct sembuf){0, -1, 0};
 	unlock = (struct sembuf){0, 1, 0};
-	new_pos = step_toward(player->pos, find_target(player, board));
+
+	target = find_target(player, board);
+	send_target(msgid, player->team, target);
+	count = read_votes(msgid, player->team, votes, 8);
+	target = vote_target(votes, count, target);
+	new_pos = step_toward(player->pos, target);
 	if (new_pos.x == player->pos.x && new_pos.y == player->pos.y)
 		return (0);
 	semop(semid, &lock, 1);
