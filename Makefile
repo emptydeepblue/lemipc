@@ -58,4 +58,46 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re
+test: all
+	@./lemipc 1 & \
+	./lemipc 1 &  \
+	./lemipc 2 & \
+	./lemipc 2 & \
+	./lemipc 1 & \
+	./lemipc 3 & \
+	./lemipc 3 & \
+	./lemipc 3 & \
+	./lemipc 4 & \
+	./lemipc 4 & \
+	./lemipc 2 & \
+	./lemipc 4 & \
+	./lemipc 2 & \
+	./lemipc 1 & \
+	./lemipc 2 & \
+	./lemipc 2 & \
+	./lemipc 1 & \
+	./lemipc 3 & \
+	./lemipc 3 & \
+	./lemipc 3 & \
+	./lemipc 4 & \
+	./lemipc 4 & \
+	./lemipc 1 & \
+	./lemipc 4 & \
+	./lemipc 3 & \
+	./lemipc 3 & \
+	./lemipc 3 & \
+	./lemipc 4 & \
+	./lemipc 4 & \
+	./lemipc 2 & \
+	./lemipc 4 & \
+	./lemipc 2 & wait
+
+vtest: all
+	@valgrind --leak-check=full --track-origins=yes --error-exitcode=1 \
+		./lemipc 1 & ./lemipc 1 & ./lemipc 2 & ./lemipc 2 & ./lemipc 1 & wait
+
+htest: all
+	@valgrind --tool=helgrind --error-exitcode=1 \
+		./lemipc 1 & ./lemipc 1 & ./lemipc 2 & ./lemipc 2 & wait
+
+.PHONY: all clean fclean re test vtest htest
