@@ -47,8 +47,8 @@ static void	buf_add_prefix(char *buf, int *len, t_player player)
 	buf_add_str(buf, len, g_skins[player.skin].icon);
 	buf_add_str(buf, len, " " TEXT_BOLD "T");
 	buf_add_int(buf, len, player.team);
-	// buf_add_str(buf, len, " P");
-	// buf_add_int(buf, len, player.pid);
+	buf_add_str(buf, len, " P");
+	buf_add_int(buf, len, player.pid);
 	buf_add_str(buf, len, RESET ": ");
 }
 

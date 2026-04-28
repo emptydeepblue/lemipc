@@ -9,8 +9,8 @@
 # include <unistd.h>
 # include <errno.h>
 
-# define MAP_SIZE    100
-# define MAX_PLAYERS 4
+# define MAP_SIZE    5
+# define MAX_PLAYERS 8
 # define MAX_TEAMS   4
 # define TEXT_SIZE	128
 
@@ -94,14 +94,22 @@ typedef struct s_msgbuf
 
 // ipc.c
 int			init_game(t_game *game);
+int			init_display(t_game *game);
 void		cleanup_game(t_game *game);
+
+// display.c
+void		run_display(t_game *game);
 
 // player.c
 t_player	register_player(t_board *board, int semid, int team);
-void		sync_alive(t_player *player, t_board *board);
+void		sync_alive(t_player *player, t_board *board, int semid);
 
 // move.c
 int			move_player(t_player *player, t_board *board, int semid, int msgid);
+
+// bfs.c
+void		bfs_fill(t_board *board, t_position target,
+				int dist[MAP_SIZE][MAP_SIZE]);
 
 // message.c
 void		send_target(int msgid, int team, t_position target);

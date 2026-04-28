@@ -6,7 +6,7 @@
 /*   By: everonel <everonel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/20 20:04:43 by everonel          #+#    #+#             */
-/*   Updated: 2026/04/22 12:39:49 by everonel         ###   ########.fr       */
+/*   Updated: 2026/04/23 16:13:19 by everonel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,14 @@ static int	get_msgid(void)
 	return (msgid);
 }
 
+static void	drain_msgqueue(int msgid)
+{
+	t_msgbuf	tmp;
+
+	while (msgrcv(msgid, &tmp, sizeof(tmp.mtext), 0, IPC_NOWAIT) >= 0)
+		;
+}
+
 int		init_game(t_game *game)
 {
 	int			is_creator;
@@ -93,20 +101,40 @@ int		init_game(t_game *game)
 		draw_error("Failed to get message queue ID");
 		return (-1);
 	}
+	if (is_creator)
+		drain_msgqueue(game->msgid);
+	return (0);
+}
+
+int	init_display(t_game *game)
+{
+	key_t	key;
+
+	ft_memset(game, 0, sizeof(t_game));
+	key = ftok("/tmp", SHM_KEY_ID);
+	if (key < 0)
+		return (-1);
+	game->shmid = shmget(key, sizeof(t_board), 0666);
+	if (game->shmid < 0)
+		return (-1);
+	game->board = shmat(game->shmid, NULL, SHM_RDONLY);
+	if (game->board == (void *)-1)
+		return (-1);
 	return (0);
 }
 
 void	cleanup_game(t_game *game)
 {
-	if (game->board)
-		shmdt(game->board);
-	if (!game->is_creator)
+	int		game_over;
+
+	if (!game->board)
 		return ;
-	if (game->shmid >= 0)
-		shmctl(game->shmid, IPC_RMID, NULL);
-	if (game->semid >= 0)
-		semctl(game->semid, 0, IPC_RMID);
-	if (game->msgid >= 0)
-		msgctl(game->msgid, IPC_RMID, NULL);
+	game_over = !game->board->running;
+	shmdt(game->board);
+	if (!game_over)
+		return ;
+	shmctl(game->shmid, IPC_RMID, NULL);
+	semctl(game->semid, 0, IPC_RMID);
+	msgctl(game->msgid, IPC_RMID, NULL);
 }
 
