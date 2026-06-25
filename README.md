@@ -1,41 +1,97 @@
-# LemIpc
+# lemipc
 
-A 42 school project on System V IPC. Multiple processes join a shared 5×5 board as players of up to 4 teams and fight until only one team remains. State is shared via SysV shared memory, synchronised with semaphores, and teams coordinate targets through a message queue.
+A multi-process battle on a shared 5×5 board: each process is a player on one of up to 4 teams, fighting until only one team remains. State is shared via System V IPC — shared memory, semaphores, and a message queue.
 
-## Build
+**Specialization:** Unix/Kernel
+**XP:** 9,450 · **People:** 1 · **Status:** 🟡 In progress (~99%)
 
-```sh
-make
-```
+---
 
-Produces the `lemipc` binary. `make fclean` to clean.
+## 🚀 Features
 
-## Usage
+- Multi-process game over System V IPC (shm + sem + msg)
+- Up to 4 teams, up to 8 players per team (configurable in [inc/lemipc.h](inc/lemipc.h))
+- Spectator mode that renders the board to the terminal
+- BFS-based pathfinding toward the nearest enemy
+- Team coordination: targets voted via the message queue
+- Bootstrap / teardown: first player creates IPCs, last alive cleans them up
 
-```sh
-./lemipc <team_number>   # 1..4 — join the game as a player on that team
-./lemipc 0               # spectator: render the board to the terminal
-```
+## 🛠️ Build & Run
 
-The first player to start creates the IPC segments; the last one alive cleans them up. Run several players in the background and a single spectator to watch a match:
+**Prerequisites:** GCC, GNU Make, Linux (System V IPC support)
 
-```sh
+```bash
+make                    # Build ./lemipc
+
+./lemipc <team>         # team ∈ 1..4 — join as a player
+./lemipc 0              # spectator: render the board
+
+# A small match: 1 spectator + 4 players across 2 teams
 ./lemipc 0 &
 ./lemipc 1 & ./lemipc 1 & ./lemipc 2 & ./lemipc 2 &
 wait
 ```
 
-## Make targets
+## 🧪 Testing
 
-- `make test` — launch a preset battle of ~32 players across 4 teams.
-- `make vtest` — small battle under valgrind (leaks).
-- `make htest` — small battle under helgrind (race conditions).
+```bash
+make test       # Preset battle: ~32 players across 4 teams
+make vtest      # Smaller battle under valgrind (leak check)
+make htest      # Smaller battle under helgrind (race / lock check)
+```
 
-## Layout
+## 📁 Project Structure
 
-- [src/ipc.c](src/ipc.c) — shm/sem/msg setup and teardown
-- [src/player.c](src/player.c) — registration and alive-sync
-- [src/move.c](src/move.c), [src/bfs.c](src/bfs.c) — movement and pathfinding
-- [src/message.c](src/message.c) — team voting on targets via msg queue
-- [src/display.c](src/display.c), [src/draw.c](src/draw.c) — spectator rendering
-- [inc/lemipc.h](inc/lemipc.h) — types and tunables (`MAP_SIZE`, `MAX_PLAYERS`, `MAX_TEAMS`)
+```
+lemipc/
+├── src/
+│   ├── lemipc.c        # Entry point, top-level orchestration
+│   ├── ipc.c           # shm/sem/msg setup and teardown
+│   ├── player.c        # Registration, alive-count sync
+│   ├── move.c          # Movement step / collision resolution
+│   ├── bfs.c           # BFS pathfinding to nearest enemy
+│   ├── message.c       # Team voting on targets via msg queue
+│   ├── display.c       # Spectator rendering
+│   └── draw.c          # Frame buffer / output
+├── inc/lemipc.h        # Types + tunables (MAP_SIZE, MAX_PLAYERS, MAX_TEAMS)
+├── libft/              # 42 libft
+└── Makefile
+```
+
+## 🔧 Implementation
+
+**IPC layout:**
+
+| Mechanism      | Purpose                                                  |
+|----------------|----------------------------------------------------------|
+| Shared memory  | Game board + per-player state (team, position, alive)    |
+| Semaphores     | Mutual exclusion on the board, alive-count synchronization |
+| Message queue  | Team-internal voting on the next target                  |
+
+**Tunables (in `inc/lemipc.h`):**
+- `MAP_SIZE` = 5 (5×5 board)
+- `MAX_PLAYERS` = 8 per team
+- `MAX_TEAMS` = 4
+
+**Lifecycle:**
+1. First process to start creates the SysV segments and seeds shared state
+2. Each player registers a slot, then loops: lock board → look at neighbors → vote/move → unlock
+3. Players die on collision with an enemy; the last process alive removes the IPC segments
+
+## 📚 Learning Objectives
+
+- System V IPC: `shmget`/`shmat`, `semget`/`semop`, `msgget`/`msgsnd`/`msgrcv`
+- Multi-process synchronization without threads
+- BFS on a small grid; coordinating moves under contention
+- Teardown discipline — leaking IPC segments is a real failure mode
+- Helgrind/valgrind on multi-process programs
+
+## 🔗 References
+
+- `man 7 sysvipc`, `man 2 shmget`, `man 2 semop`, `man 2 msgsnd`
+- *Advanced Programming in the Unix Environment*, ch. 15 (IPC)
+- `ipcs(1)` / `ipcrm(1)` — list and clean up SysV segments
+
+---
+
+*42 School — RNCP7 · Unix/Kernel*
