@@ -3,4 +3,5 @@
 
 # Ignore the compiled binary and object files
 lemipc
-obj/CLAUDE.md
+obj/
+CLAUDE.md
