@@ -3,8 +3,7 @@
 A multi-process battle on a shared 5×5 board: each process is a player on one of up to 4 teams, fighting until only one team remains. State is shared via System V IPC — shared memory, semaphores, and a message queue.
 
 **Specialization:** Unix/Kernel
-**XP:** 9,450 · **People:** 1 · **Status:** 🟡 In progress (~99%)
-
+**XP:** 9,450 · **People:** 1 · **Status:** 🟦 Completed
 ---
 
 ## 🚀 Features
